@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>StudyPath — build your learning path</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="wordmark" href="{{ url_for('index') }}">Study<span>Path</span></a>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>Tell us what you want to learn.</h1>
+    <p class="lede">Pick a subject and we'll build you a week-by-week study roadmap, pulling the best free and paid courses from across the web — ranked for your level and budget, with practice questions and a short quiz to finish each topic.</p>
+
+    {% with msgs = get_flashed_messages() %}{% if msgs %}<p class="notice">{{ msgs[0] }}</p>{% endif %}{% endwith %}
+    <form id="onboardForm" class="catalog-card" method="POST" action="{{ url_for('build_plan') }}">
+      <input type="hidden" name="level"><input type="hidden" name="goal"><input type="hidden" name="budget"><input type="hidden" name="education">
+      <datalist id="subjects">{% for s in subjects %}<option value="{{ s.name }}">{% endfor %}</datalist>
+
+      <!-- Step 1: about you -->
+      <div class="screen active" data-step="1">
+        <div class="step-label">STEP 1 OF 5</div>
+        <h2>First, tell us about you</h2>
+        <div class="field">
+          <label for="name">Your name</label>
+          <input type="text" id="name" name="name" maxlength="100" placeholder="e.g. Aarav Sharma" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Your course or class</label>
+          <div class="pill-group" id="educationGroup">
+            {% for e in education %}<button type="button" class="pill" data-value="{{ e }}">{{ e }}</button>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="card-actions">
+          <span></span>
+          <button type="button" class="btn btn-primary" data-next>Next</button>
+        </div>
+        <div class="step-dots"><span class="done"></span><span></span><span></span><span></span><span></span></div>
+      </div>
+
+      <!-- Step 2: subject -->
+      <div class="screen active" data-step="2">
+        <div class="step-label">STEP 2 OF 5</div>
+        <h2>What subject?</h2>
+        <div class="field">
+          <label for="subject">Type a subject or topic</label>
+          <input type="text" id="subject" name="subject" list="subjects" placeholder="e.g. Data Structures, Web Development, Machine Learning" autocomplete="off">
+        </div>
+        <div class="card-actions">
+          <span></span>
+          <button type="button" class="btn btn-primary" data-next>Next</button>
+        </div>
+        <div class="step-dots"><span class="done"></span><span class="done"></span><span></span><span></span><span></span></div>
+      </div>
+
+      <!-- Step 3: level -->
+      <div class="screen" data-step="3">
+        <div class="step-label">STEP 3 OF 5</div>
+        <h2>Where are you starting from?</h2>
+        <div class="field">
+          <div class="pill-group" id="levelGroup">
+            <button type="button" class="pill" data-value="Beginner">Beginner</button>
+            <button type="button" class="pill" data-value="Intermediate">Intermediate</button>
+            <button type="button" class="pill" data-value="Advanced">Advanced</button>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button type="button" class="btn btn-text" data-back>Back</button>
+          <button type="button" class="btn btn-primary" data-next>Next</button>
+        </div>
+        <div class="step-dots"><span class="done"></span><span class="done"></span><span class="done"></span><span></span><span></span></div>
+      </div>
+
+      <!-- Step 4: goal -->
+      <div class="screen" data-step="4">
+        <div class="step-label">STEP 4 OF 5</div>
+        <h2>What's this for?</h2>
+        <div class="field">
+          <div class="pill-group" id="goalGroup">
+            <button type="button" class="pill" data-value="Exam prep">Exam prep</button>
+            <button type="button" class="pill" data-value="Job skill">Job skill</button>
+            <button type="button" class="pill" data-value="Coursework">College coursework</button>
+            <button type="button" class="pill" data-value="Curiosity">Personal interest</button>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button type="button" class="btn btn-text" data-back>Back</button>
+          <button type="button" class="btn btn-primary" data-next>Next</button>
+        </div>
+        <div class="step-dots"><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span><span></span></div>
+      </div>
+
+      <!-- Step 5: budget + time -->
+      <div class="screen" data-step="5">
+        <div class="step-label">STEP 5 OF 5</div>
+        <h2>Budget and pace</h2>
+        <div class="field">
+          <label>Course budget</label>
+          <div class="pill-group" id="budgetGroup">
+            <button type="button" class="pill" data-value="Free only">Free only</button>
+            <button type="button" class="pill" data-value="Paid okay">Paid is okay</button>
+            <button type="button" class="pill" data-value="No preference">No preference</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="time">Time you can give per week</label>
+          <input type="text" id="time" name="time" placeholder="e.g. 5 hours/week" autocomplete="off">
+        </div>
+        <div class="card-actions">
+          <button type="button" class="btn btn-text" data-back>Back</button>
+          <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Build my roadmap</button>
+        </div>
+        <div class="step-dots"><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span><span class="done"></span></div>
+      </div>
+
+    </form>
+  </section>
+</main>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

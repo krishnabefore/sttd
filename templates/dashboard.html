@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>StudyPath — your roadmap</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="wordmark" href="{{ url_for('index') }}">Study<span>Path</span></a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="dash-head">
+    <div class="eyebrow-line">{{ plan.learner|upper }} · {{ plan.education|upper }} · {{ plan.subject|upper }} · {{ plan.level|upper }} · {{ plan.hours_per_week }} HRS/WEEK</div>
+    <h1>{{ plan.learner }}'s roadmap</h1>
+    <p>{{ topics|length }} topics. Watch, practise, then pass the quiz (70% or more) to complete each topic.</p>
+  </div>
+
+  {% if prog.complete %}
+  <div class="banner">Course completed. You passed every topic quiz in {{ plan.subject }}. Well done, {{ plan.learner }}!</div>
+  {% endif %}
+
+  <div class="progress-label">{{ prog.passed }} of {{ prog.total }} topics completed · {{ prog.percent }}%</div>
+  <div class="progress-track"><div class="progress-fill" style="width: {{ prog.percent }}%"></div></div>
+
+  {% for t in topics %}
+  <div class="week-block">
+    <div class="week-label">WEEK {{ t.week }}</div>
+    <h3>{{ t.name }}{% if t.progress and t.progress.passed %}<span class="badge done">Completed</span>{% endif %}</h3>
+    <div class="hours">~{{ t.hours }} hrs estimated</div>
+    <div class="section-label">1 · Learn <span class="soft">(tick a course when you have watched it)</span></div>
+    {% for c in t.courses %}
+    <div class="course-row">
+      <div class="check {{ 'checked' if c.done }}" data-item="{{ c.item_id }}"></div>
+      <div class="course-info">
+        <a class="course-title" href="{{ c.url }}" target="_blank" rel="noopener">{{ c.title }}</a>
+        <div class="course-meta">{{ c.platform }} · ★ {{ c.rating }}<span class="tag {{ 'free' if c.is_free else 'paid' }}">{{ c.price_label }}</span></div>
+      </div>
+    </div>
+    {% endfor %}
+
+    {% if t.questions %}
+    <div class="section-label">2 · Practise</div>
+    <ul class="practice-list">
+      {% for q in t.questions %}
+      <li>
+        {% if q.url %}<a href="{{ q.url }}" target="_blank" rel="noopener">{{ q.title }}</a>{% else %}{{ q.title }}{% endif %}
+        <span class="tag diff-{{ q.difficulty|lower }}">{{ q.difficulty }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    <div class="section-label">3 · Quiz</div>
+    {% if t.has_quiz %}
+    <div class="quiz-row">
+      <span class="quiz-status">
+        {% if t.progress %}Best score: {{ t.progress.best_score }}%{% if t.progress.passed %} · passed{% else %} · not passed yet{% endif %}{% else %}Not attempted yet{% endif %}
+      </span>
+      <a class="btn btn-primary btn-small" href="{{ url_for('quiz', plan_id=plan.plan_id, topic_id=t.topic_id) }}">{{ 'Retake quiz' if t.progress else 'Take quiz' }}</a>
+    </div>
+    {% else %}
+    <div class="quiz-status">No quiz for this topic yet.</div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</main>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

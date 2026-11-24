@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>StudyPath — {{ topic.name }} quiz</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="wordmark" href="{{ url_for('index') }}">Study<span>Path</span></a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="dash-head">
+    <div class="eyebrow-line">{{ plan.subject|upper }} · QUIZ</div>
+    <h1>{{ topic.name }}</h1>
+    <p>{{ questions|length }} questions. You need 70% or more to complete this topic.</p>
+  </div>
+
+  {% if result %}
+  <div class="result {{ 'pass' if result.passed else 'fail' }}">
+    <div class="result-score">{{ result.percent }}%</div>
+    <div>
+      <strong>{{ 'Topic completed' if result.passed else 'Not passed yet' }}</strong>
+      <div class="soft">{{ result.correct }} of {{ result.total }} correct.
+        {% if not result.passed %}Review the answers below and try again.{% endif %}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <form method="POST" action="{{ url_for('quiz', plan_id=plan.plan_id, topic_id=topic.topic_id) }}">
+    {% for q in questions %}
+    {% set r = review.get(q.quiz_id) %}
+    <fieldset class="q-card {{ ('right' if r.right else 'wrong') if r }}">
+      <legend>{{ loop.index }}. {{ q.prompt }}</legend>
+      {% for letter in ['a', 'b', 'c', 'd'] %}
+      <label class="option {{ 'is-correct' if r and r.correct_option == letter }}{{ ' is-chosen' if r and r.chosen == letter }}">
+        <input type="radio" name="q_{{ q.quiz_id }}" value="{{ letter }}" {{ 'required' if loop.first }}{{ ' checked' if r and r.chosen == letter }}>
+        <span>{{ q['option_' ~ letter] }}</span>
+      </label>
+      {% endfor %}
+      {% if r %}<div class="q-note">{{ 'Correct.' if r.right else 'The correct answer is ' ~ r.correct_option|upper ~ '.' }}</div>{% endif %}
+    </fieldset>
+    {% endfor %}
+
+    <div class="card-actions">
+      <a class="btn btn-text" href="{{ url_for('plan', plan_id=plan.plan_id) }}">Back to roadmap</a>
+      <button type="submit" class="btn btn-primary">{{ 'Submit again' if result else 'Submit quiz' }}</button>
+    </div>
+  </form>
+</main>
+
+</body>
+</html>
