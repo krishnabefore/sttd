@@ -96,3 +96,114 @@ CREATE TABLE IF NOT EXISTS topic_progress (
   FOREIGN KEY (plan_id) REFERENCES study_plans(plan_id) ON DELETE CASCADE,
   FOREIGN KEY (topic_id) REFERENCES topics(topic_id) ON DELETE CASCADE
 );
+
+-- =====================================================================
+-- Coding practice platform
+-- =====================================================================
+
+-- One row per coding problem. Examples, hints and discussion notes are stored as JSON text.
+CREATE TABLE IF NOT EXISTS problems (
+  problem_id INT AUTO_INCREMENT PRIMARY KEY,
+  slug VARCHAR(80) NOT NULL UNIQUE,
+  title VARCHAR(150) NOT NULL,
+  difficulty VARCHAR(10) NOT NULL,
+  pattern VARCHAR(80) NOT NULL,
+  est_minutes INT NOT NULL,
+  levels VARCHAR(60) NOT NULL,
+  companies VARCHAR(200) NOT NULL DEFAULT '',
+  statement TEXT NOT NULL,
+  input_format TEXT NOT NULL,
+  output_format TEXT NOT NULL,
+  constraints_text TEXT NOT NULL,
+  examples_json TEXT NOT NULL,
+  hints_json TEXT NOT NULL,
+  discussion_json TEXT NOT NULL,
+  editorial TEXT NOT NULL,
+  solution_code TEXT NOT NULL,
+  time_limit_ms INT NOT NULL DEFAULT 2000,
+  memory_limit_mb INT NOT NULL DEFAULT 256
+);
+
+-- Where a problem sits in each goal track: unit, priority (1 core, 2 important, 3 stretch), order.
+CREATE TABLE IF NOT EXISTS problem_tracks (
+  placement_id INT AUTO_INCREMENT PRIMARY KEY,
+  problem_id INT NOT NULL,
+  track VARCHAR(20) NOT NULL,
+  unit_no INT NOT NULL,
+  unit_name VARCHAR(80) NOT NULL,
+  priority INT NOT NULL,
+  seq INT NOT NULL,
+  UNIQUE KEY one_placement (problem_id, track),
+  FOREIGN KEY (problem_id) REFERENCES problems(problem_id) ON DELETE CASCADE
+);
+
+-- Public cases are shown to the learner. Hidden cases are only ever reported as pass or fail.
+CREATE TABLE IF NOT EXISTS test_cases (
+  test_id INT AUTO_INCREMENT PRIMARY KEY,
+  problem_id INT NOT NULL,
+  ordinal INT NOT NULL,
+  is_public BOOLEAN NOT NULL,
+  input_text MEDIUMTEXT NOT NULL,
+  expected_text MEDIUMTEXT NOT NULL,
+  FOREIGN KEY (problem_id) REFERENCES problems(problem_id) ON DELETE CASCADE
+);
+
+-- A learner's personalised roadmap. No login: the path id in the URL is the key.
+CREATE TABLE IF NOT EXISTS paths (
+  path_id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  role VARCHAR(40) NOT NULL,
+  level VARCHAR(20) NOT NULL,
+  goal VARCHAR(40) NOT NULL,
+  track VARCHAR(20) NOT NULL,
+  language VARCHAR(20) NOT NULL,
+  deadline_days INT NOT NULL,
+  minutes_per_day INT NOT NULL,
+  start_date VARCHAR(10) NOT NULL,
+  last_replan_day INT NOT NULL DEFAULT 0,
+  plan_note TEXT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- The day-by-day schedule. status: pending (scheduled), done (solved), backlog (parked to protect the deadline).
+CREATE TABLE IF NOT EXISTS path_items (
+  item_id INT AUTO_INCREMENT PRIMARY KEY,
+  path_id INT NOT NULL,
+  problem_id INT NOT NULL,
+  curriculum_order INT NOT NULL,
+  day_no INT NULL,
+  status VARCHAR(10) NOT NULL DEFAULT 'pending',
+  hints_used INT NOT NULL DEFAULT 0,
+  solved_at VARCHAR(19) NULL,
+  UNIQUE KEY one_item_per_problem (path_id, problem_id),
+  FOREIGN KEY (path_id) REFERENCES paths(path_id) ON DELETE CASCADE,
+  FOREIGN KEY (problem_id) REFERENCES problems(problem_id)
+);
+
+CREATE TABLE IF NOT EXISTS submissions (
+  submission_id INT AUTO_INCREMENT PRIMARY KEY,
+  path_id INT NOT NULL,
+  problem_id INT NOT NULL,
+  language VARCHAR(20) NOT NULL,
+  code MEDIUMTEXT NOT NULL,
+  verdict VARCHAR(30) NOT NULL,
+  passed INT NOT NULL DEFAULT 0,
+  total INT NOT NULL DEFAULT 0,
+  runtime_ms INT NULL,
+  memory_mb DECIMAL(8,1) NULL,
+  created_at VARCHAR(19) NOT NULL,
+  FOREIGN KEY (path_id) REFERENCES paths(path_id) ON DELETE CASCADE,
+  FOREIGN KEY (problem_id) REFERENCES problems(problem_id)
+);
+
+-- The learner's private notes on a problem (autosaved from the workspace).
+CREATE TABLE IF NOT EXISTS problem_notes (
+  note_id INT AUTO_INCREMENT PRIMARY KEY,
+  path_id INT NOT NULL,
+  problem_id INT NOT NULL,
+  body TEXT NOT NULL,
+  updated_at VARCHAR(19) NOT NULL,
+  UNIQUE KEY one_note_per_problem (path_id, problem_id),
+  FOREIGN KEY (path_id) REFERENCES paths(path_id) ON DELETE CASCADE,
+  FOREIGN KEY (problem_id) REFERENCES problems(problem_id)
+);

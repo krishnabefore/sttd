@@ -4,6 +4,7 @@ Run once:  python seed.py"""
 import os
 from urllib.parse import quote
 from db import DB
+from problems_seed import load_problems
 
 # Every course links to that platform's search page for its title, so links never break.
 SEARCH = {
@@ -204,13 +205,16 @@ def main():
         for stmt in f.read().split(';'):
             if stmt.strip():
                 cur.execute(stmt)
-    cur.execute('SELECT COUNT(*) FROM subjects')
+        cur.execute('SELECT COUNT(*) FROM subjects')
     if cur.fetchone()[0]:
-        print('Database already has data, nothing to do.')
+        print('Course data already loaded.')
     else:
         load(cur)
         conn.commit()
-        print('Database created and sample data loaded.')
+        print('Course data loaded.')
+    added = load_problems(cur)
+    conn.commit()
+    print(f'Coding problems added: {added}')
     conn.close()
 
 
